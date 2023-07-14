@@ -1,12 +1,12 @@
 defmodule Product.Structure do
 
   defmodule Entity do
-    alias Product.Structure
     alias Core.Structure
     alias Core.Structure.Id
+    alias Product.Structure
 
-    @enforce_keys [:id, :name, :price, :created_at]
-    defstruct [:id, :name, :desc, :price, :created_at, :updated_at]
+    @enforce_keys [:id, :category_id, :name, :price, :created_at]
+    defstruct [:id, :category_id, :name, :desc, :price, :created_at, :updated_at]
 
     @error_validation_not_passed {:error, "invalid given new product structure"}
     @error_invalid_new_product_type {:error, "invalid given new product type"}
@@ -16,6 +16,7 @@ defmodule Product.Structure do
     """
     @type t :: %__MODULE__{
       id: Id.t(),
+      category_id: Id.t(),
       name: String.t(),
       desc: String.t(),
       price: non_neg_integer(),
@@ -29,8 +30,9 @@ defmodule Product.Structure do
     """
     @type new_product :: %{
       required(:name) => String.t(),
-      required(:desc) => String.t(),
+      required(:category_id) => Id.t(),
       required(:price) => non_neg_integer(),
+      optional(:desc) => String.t(),
     }
 
     @doc """
@@ -49,8 +51,9 @@ defmodule Product.Structure do
       do
         %Entity{
           id: uid,
+          category_id: product_validated.category_id,
           name: product_validated.name,
-          desc: product_validated.desc,
+          desc: Map.get(product, :desc),
           price: product_validated.price,
           created_at: DateTime.utc_now()
         }
@@ -66,7 +69,7 @@ defmodule Product.Structure do
     defp validate_new_product(product) when is_map(product) do
 
       required_keys =
-        [:name, :desc, :price]
+        [:name, :category_id, :price]
         |> Enum.reject(fn key -> Map.has_key?(product, key) end)
         |> Enum.filter(fn key ->
           if key == :price do
