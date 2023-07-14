@@ -1,10 +1,5 @@
 defmodule User.Structure do
 
-  @typep error_reason :: String.t()
-
-  @type error :: {:error, error_reason()}
-  @type ok :: {:ok, any()}
-
   defmodule Password do
     @moduledoc """
     Password is a value object used to hash and check
@@ -68,51 +63,14 @@ defmodule User.Structure do
     defp compare(raw_hashed, hashed), do: raw_hashed == hashed
   end
 
-  defmodule Id do
-    @moduledoc """
-    Id is a value object specific for unique for id. Actually it is just
-    a string of UUID but has been modified to be more short and can be
-    decoded back to it's original format
-    """
-    alias User.Structure
-
-    @typedoc """
-    It's base original type of this value object, it is a String
-    """
-    @type t :: String.t()
-
-    @doc """
-    Generate new UUID and pipe it to ShortUUID for more compact format
-    """
-    @spec new() :: t() | Structure.error()
-    def new() do
-      out = UUID.uuid4() |> ShortUUID.encode()
-      case out do
-        {:ok, uid} -> uid
-        _ -> out
-      end
-    end
-
-    @doc """
-    Decode given shorted uid to it's original format, which is UUID
-    """
-    @spec decode(shorted :: String.t()) :: t() | Structure.error()
-    def decode(shorted) do
-      out = shorted |> ShortUUID.decode()
-      case out do
-        {:ok, original} -> original
-        _ -> out
-      end
-    end
-  end
-
   defmodule Entity do
     @moduledoc """
     Entity is a main User's entity structure it describe user's properties
     and also act as User's root aggregate
     """
-    alias User.Structure
-    alias User.Structure.{Id, Password}
+    alias Core.Structure
+    alias Core.Structure.Id
+    alias User.Structure.Password
 
     @enforce_keys [:id, :name, :email, :password, :created_at]
     defstruct [:id, :name, :email, :password, :created_at, :updated_at]
@@ -181,6 +139,41 @@ defmodule User.Structure do
       end
     end
 
+  end
+
+  defmodule Event do
+    @moduledoc """
+    Event used to describe all user's management. It describe per event names and it's payload
+    """
+    alias Core.Structure, as: CoreStructure
+    alias User.Structure.Entity, as: UserEntity
+
+    @error_invalid_user_type "invalid given user type"
+
+    @doc """
+    user_registered triggered when user successfully registered to system
+    """
+    @spec user_registered(user :: UserEntity.t()) :: CoreStructure.event() | CoreStructure.error()
+    def user_registered(user) when is_struct(user), do: {:event, :user_registered, user}
+    def user_registered(_), do: {:error, @error_invalid_user_type}
+
+    @doc """
+    user_logged_in triggered when user successfully loggedi in to system
+    """
+    @spec user_logged_in(user :: UserEntity.t()) :: CoreStructure.event() | CoreStructure.error()
+    def user_logged_in(user) when is_struct(user), do: {:even, :user_logged_in, user}
+    def user_logged_in(_), do: {:error, @error_invalid_user_type}
+
+    @spec user_modified(user :: UserEntity.t()) :: CoreStructure.event() | CoreStructure.error()
+    def user_modified(user) when is_struct(user), do: {:event, :user_modified, user}
+    def user_modified(_), do: {:error, @error_invalid_user_type}
+
+    @doc """
+    user_deleted triggered when user deleted from system
+    """
+    @spec user_deleted(user :: UserEntity.t()) :: CoreStructure.event() | CoreStructure.error()
+    def user_deleted(user) when is_struct(user), do: {:event, :user_deleted, user}
+    def user_deleted(_), do: {:error, @error_invalid_user_type}
   end
 
 end

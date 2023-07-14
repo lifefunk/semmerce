@@ -1,9 +1,9 @@
-defmodule User.MixProject do
+defmodule Core.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :user,
+      app: :core,
       version: "0.1.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
@@ -29,8 +29,7 @@ defmodule User.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       # {:sibling_app_in_umbrella, in_umbrella: true}
       {:elixir_uuid, "~> 1.2" },
-      {:shortuuid, "~> 2.0"},
-      {:core, in_umbrella: true}
+      {:shortuuid, "~> 2.0"}
     ]
   end
 end

@@ -1,51 +1,9 @@
 defmodule Product.Structure do
 
-  @typep error_reason :: String.t()
-
-  @type error :: {:error, error_reason()}
-  @type ok :: {:ok, any()}
-
-  defmodule Id do
-    @moduledoc """
-    Id is a value object specific for unique for id. Actually it is just
-    a string of UUID but has been modified to be more short and can be
-    decoded back to it's original format
-    """
-    alias User.Structure
-
-    @typedoc """
-    It's base original type of this value object, it is a String
-    """
-    @type t :: String.t()
-
-    @doc """
-    Generate new UUID and pipe it to ShortUUID for more compact format
-    """
-    @spec new() :: t() | Structure.error()
-    def new() do
-      out = UUID.uuid4() |> ShortUUID.encode()
-      case out do
-        {:ok, uid} -> uid
-        _ -> out
-      end
-    end
-
-    @doc """
-    Decode given shorted uid to it's original format, which is UUID
-    """
-    @spec decode(shorted :: String.t()) :: t() | Structure.error()
-    def decode(shorted) do
-      out = shorted |> ShortUUID.decode()
-      case out do
-        {:ok, original} -> original
-        _ -> out
-      end
-    end
-  end
-
   defmodule Entity do
     alias Product.Structure
-    alias Product.Structure.{Id}
+    alias Core.Structure
+    alias Core.Structure.Id
 
     @enforce_keys [:id, :name, :price, :created_at]
     defstruct [:id, :name, :desc, :price, :created_at, :updated_at]
@@ -127,4 +85,34 @@ defmodule Product.Structure do
     end
   end
 
+  defmodule Event do
+    @moduledoc """
+    Event used to describe all possible product's events
+    """
+    alias Core.Structure, as: CoreStructure
+    alias Product.Structure.Entity, as: ProductEntity
+
+    @error_invalid_product_type "invalid given product entity type"
+
+    @doc """
+    product_created used when a new product successfully created and saved in database
+    """
+    @spec product_created(product :: ProductEntity.t()) :: CoreStructure.event() | CoreStructure.error()
+    def product_created(product) when is_struct(product), do: {:event, :product_created, product}
+    def product_created(_), do: {:error, @error_invalid_product_type}
+
+    @doc """
+    product_modified used when a new product successfully modified
+    """
+    @spec product_modified(product :: ProductEntity.t()) :: CoreStructure.event() | CoreStructure.error()
+    def product_modified(product) when is_struct(product), do: {:event, :product_modified, product}
+    def product_modified(_), do: {:error, @error_invalid_product_type}
+
+    @doc """
+    product_deleted used when a product deleted from system
+    """
+    @spec product_deleted(product :: ProductEntity.t()) :: CoreStructure.event() | CoreStructure.error()
+    def product_deleted(product) when is_struct(product), do: {:event, :product_deleted, product}
+    def product_deleted(_), do: {:error, @error_invalid_product_type}
+  end
 end
