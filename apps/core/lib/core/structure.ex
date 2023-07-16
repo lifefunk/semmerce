@@ -1,12 +1,13 @@
 defmodule Core.Structure do
 
   @typep error_reason :: String.t()
+  @typep error_type :: atom()
 
   @typedoc """
   Define error type which is a tuple of atom :error
   and error message
   """
-  @type error :: {:error, error_reason()}
+  @type error :: {:error, {error_type(), error_reason()}}
 
   @typedoc """
   Define success value type which is a tuple of atom :ok
@@ -17,7 +18,7 @@ defmodule Core.Structure do
   @typedoc """
   Define all possible types used as event's payload
   """
-  @type event_types ::
+  @type event_payload ::
     struct()
     | String.t()
     | atom()
@@ -27,10 +28,42 @@ defmodule Core.Structure do
     | list(any())
 
   @typedoc """
+  Define type of event_name, it can be string or an atom
+  Example:
+    {:event, :event_name, 1}
+    {:event, "event_name", %{}}
+  """
+  @type event_name :: String.t() | atom()
+
+  @typedoc """
   Define an event type which is a tuple of atom :event
   with any struct value types
   """
-  @type event :: {:event, String.t(), event_types()}
+  @type event :: {:event, event_name(), event_payload()}
+
+  @typedoc """
+  Define a result of some process with return success (ok) and
+  also return the process events. This type will be useful in
+  Aggregate things
+  """
+  @type ok_with_event :: {:ok_with_event, any(), event()}
+
+  @typedoc """
+  Define specific aggregate name
+  """
+  @type aggregate_name :: String.t() | atom()
+
+  @typedoc """
+  Define a payload type for aggregate data structure
+  """
+  @type aggregate_payload :: struct() | map() | nil
+
+  @typedoc """
+  Define a structure of aggregate data structure, it contains
+  only for specific entity which is a struct and a list unpublished
+  events
+  """
+  @type aggregate :: {:aggregate, aggregate_name(), aggregate_payload()}
 
   defmodule Id do
     @moduledoc """
