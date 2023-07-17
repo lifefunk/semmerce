@@ -14,22 +14,21 @@ defmodule Product.Core.Repository do
   """
   alias Core.Structure, as: CoreStructure
   alias Product.Core.Aggregate, as: ProductAggregate
-  alias Product.Core.Structure.Entity, as: ProductEntity
 
   @doc """
   Get all products
   """
-  @callback get_products() :: {:ok, list(ProductEntity.t())} | CoreStructure.error()
+  @callback get_products() :: {:ok, list(ProductAggregate.t())} | CoreStructure.error()
 
   @doc """
   Get all products by category_id
   """
-  @callback get_products_by_category_id(category_id :: String.t()) :: {:ok, list(ProductEntity.t())} | CoreStructure.error()
+  @callback get_products_by_category_id(category_id :: String.t()) :: {:ok, list(ProductAggregate.t())} | CoreStructure.error()
 
   @doc """
   Get detail product by id
   """
-  @callback get_product_by_id(id :: String.t()) :: {:ok, ProductEntity.t()} | CoreStructure.error()
+  @callback get_product_by_id(id :: String.t()) :: {:ok, ProductAggregate.t()} | CoreStructure.error()
 
   @doc """
   Save product. Given argument will be product's aggregate
