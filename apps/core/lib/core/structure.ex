@@ -65,6 +65,47 @@ defmodule Core.Structure do
   """
   @type aggregate :: {:aggregate, aggregate_name(), aggregate_payload()}
 
+  defmodule Function.Builder do
+    @moduledoc """
+    Function.Builder supposed to be as a "standard"
+    to build all *critical* functions like usecase modules.
+
+    This builder give us a helpers, such as for function's dependencies
+    """
+
+    defmodule Dependency do
+      @moduledoc """
+      Provide a mechanism like DI (Dependency Injection). In OOP languages,
+      we can set the dependencies once and store it into object's states.
+
+      But in functional languages, like Elixir, there are no internal states
+      (well actually it has, but it's not supposed to be like that). I'm prefer to
+      using function dependencies which pass it as function parameters rather than
+      using config, especially if we want to create a flexible library
+
+      To make it standard, I think I need this helper. A 'Dependency` module actually
+      is just a simple struct contains of `deps` and `options`, where a `deps` can be
+      a struct or map, it depends on your needs
+      """
+
+      @enforce_keys [:deps]
+      defstruct [:deps, :options]
+
+      @typedoc """
+      Define an "object" dependencies, any value that needed by your function, for example
+      like behaviour implementation, you can store it into some structs or maps
+      """
+      @type objects :: module() | struct() | map()
+      @type options :: keyword() | nil
+
+      @type t :: %__MODULE__{
+        deps: objects(),
+        options: options()
+      }
+    end
+
+  end
+
   defmodule Id do
     @moduledoc """
     Id is a value object specific for unique id. Actually it is just
