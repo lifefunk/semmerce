@@ -13,7 +13,6 @@ defmodule Product.Core.Aggregate do
   alias Product.Core.Structure.Entity, as: ProductEntity
   alias Product.Category.Core.Structure, as: CategoryStructure
 
-  @enforce_keys [:entity, :events]
   defstruct [:entity, :events]
 
   @typedoc """
@@ -73,10 +72,26 @@ defmodule Product.Core.Aggregate do
   end
 
   @doc """
+  Used to create an empty aggregate, it will be usefull when we are willing to
+  create a new product entity
+  """
+  @spec new() :: CoreStructure.aggregate()
+  def new() do
+    {:aggregate, @aggregate_name, %Aggregate{}}
+  end
+
+  @doc """
   create_new used to generate new entity of product and also set product's event product_created
   """
-  @spec create_new(agg :: t(), product :: ProductEntity.new_product(), category :: CategoryStructure.Entity.t()) :: {:ok, t()} | CoreStructure.error()
-  def create_new(agg, product, category) when is_struct(agg) and is_map(product) and is_struct(category) do
+  @spec create_new(
+    agg :: CoreStructure.aggregate(),
+    product :: ProductEntity.new_product(),
+    category :: CategoryStructure.Entity.t()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
+  def create_new(agg, product, category)
+      when is_tuple(agg)
+      and is_map(product)
+      and is_struct(category) do
+
     with {:ok, entity} <- ProductEntity.new(product, category),
          {:ok, event} <- ProductEvent.product_created(entity)
     do
@@ -84,14 +99,15 @@ defmodule Product.Core.Aggregate do
     else
       err -> err
     end
+
   end
   def create_new(_ , _, _), do: @error_invalid_product_type
 
   @doc """
   change_category used to update given product's entity, changing it's category
   """
-  @spec change_category(agg :: t(), product :: ProductEntity.t(), category :: CategoryStructure.Entity.t()) :: {:ok, t()} | CoreStructure.error()
-  def change_category(agg, product, category) when is_struct(agg) and is_struct(product) and is_struct(category) do
+  @spec change_category(agg :: CoreStructure.aggregate(), product :: ProductEntity.t(), category :: CategoryStructure.Entity.t()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
+  def change_category(agg, product, category) when is_tuple(agg) and is_struct(product) and is_struct(category) do
     with {:ok, entity} <- ProductEntity.change_category(product, category),
          {:ok, event} <- ProductEvent.product_modified(entity)
     do
@@ -105,8 +121,8 @@ defmodule Product.Core.Aggregate do
   @doc """
   change_name used to update product's name
   """
-  @spec change_name(agg :: t(), product :: ProductEntity.t(), name :: String.t()) :: {:ok, t()} | CoreStructure.error()
-  def change_name(agg, product, name) when is_struct(agg) and is_struct(product) and is_binary(name) do
+  @spec change_name(agg :: CoreStructure.aggregate(), product :: ProductEntity.t(), name :: String.t()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
+  def change_name(agg, product, name) when is_tuple(agg) and is_struct(product) and is_binary(name) do
     with {:ok, entity} <- ProductEntity.change_name(product, name),
          {:ok, event} <- ProductEvent.product_modified(entity)
     do
@@ -120,8 +136,8 @@ defmodule Product.Core.Aggregate do
   @doc """
   change_desc used to update product's description
   """
-  @spec change_desc(agg :: t(), product :: ProductEntity.t(), desc :: String.t()) :: {:ok, t()} | CoreStructure.error()
-  def change_desc(agg, product, desc) when is_struct(agg) and is_struct(product) and is_binary(desc) do
+  @spec change_desc(agg :: CoreStructure.aggregate(), product :: ProductEntity.t(), desc :: String.t()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
+  def change_desc(agg, product, desc) when is_tuple(agg) and is_struct(product) and is_binary(desc) do
     with {:ok, entity} <- ProductEntity.change_desc(product, desc),
          {:ok, event} <- ProductEvent.product_modified(entity)
     do
@@ -135,8 +151,8 @@ defmodule Product.Core.Aggregate do
   @doc """
   change_price used to update product's price
   """
-  @spec change_price(agg :: t(), product :: ProductEntity.t(), price :: non_neg_integer()) :: {:ok, t()} | CoreStructure.error()
-  def change_price(agg, product, price) when is_struct(agg) and is_struct(product) and is_integer(price) do
+  @spec change_price(agg :: CoreStructure.aggregate(), product :: ProductEntity.t(), price :: non_neg_integer()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
+  def change_price(agg, product, price) when is_tuple(agg) and is_struct(product) and is_integer(price) do
     with {:ok, entity} <- ProductEntity.change_price(product, price),
          {:ok, event} <- ProductEvent.product_modified(entity)
     do
@@ -150,8 +166,13 @@ defmodule Product.Core.Aggregate do
   @doc """
   remove_product is not doing anything, it's only for generate product's event
   """
-  @spec remove_product(agg :: t(), product :: ProductEntity.t()) :: {:ok, t()} | CoreStructure.error()
-  def remove_product(agg, product) when is_struct(agg) and is_struct(product) do
+  @spec remove_product(
+    agg :: CoreStructure.aggregate(),
+    product :: ProductEntity.t()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
+  def remove_product(agg, product)
+       when is_tuple(agg)
+       and is_struct(product) do
+
     out = ProductEvent.product_deleted(product)
     case out do
       {:ok, event} ->
@@ -159,14 +180,43 @@ defmodule Product.Core.Aggregate do
       {:error, _error} ->
         out
     end
+
   end
   def remove_product(_, _), do: @error_invalid_product_type
 
-  defp update_aggregate(agg, entity, event) when is_struct(agg) and is_struct(entity) and is_tuple(event) do
-    out =
-      %{agg | entity: entity, events: CoreEvent.add_event(agg.events, event)}
-
-    {:ok, out}
+  @spec aggregate(agg :: CoreStructure.aggregate()) :: {:ok, t()} | CoreStructure.error()
+  def aggregate(agg) when is_tuple(agg) do
+    try do
+      elem(agg, 2)
+    rescue
+      e in ArgumentError -> {:error, {:exception, e.message}}
+    end
   end
+
+  @spec entity(agg :: t()) :: ProductEntity.t()
+  def entity(agg), do: agg.entity
+
+  @spec update_aggregate(
+    agg :: CoreStructure.aggregate(),
+    entity :: ProductEntity.t(),
+    event :: CoreStructure.event()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
+  defp update_aggregate(agg, entity, event)
+        when is_tuple(agg)
+        and is_struct(entity)
+        and is_tuple(event) do
+
+    out = agg |> aggregate
+    case out do
+      {:ok, product} ->
+        out =
+          %{product | entity: entity, events: CoreEvent.add_event(product.events, event)}
+        {:ok, {:aggregate, @aggregate_name, out}}
+      _ ->
+        out
+    end
+
+  end
+
+  @spec update_aggregate(any(), any(), any()) :: CoreStructure.error()
   defp update_aggregate(_, _, _), do: @error_invalid_product_type
 end

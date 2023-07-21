@@ -13,30 +13,29 @@ defmodule Product.Core.Repository do
   - remove product
   """
   alias Core.Structure, as: CoreStructure
-  alias Product.Core.Aggregate, as: ProductAggregate
 
   @doc """
   Get all products
   """
-  @callback get_products() :: {:ok, list(ProductAggregate.t())} | CoreStructure.error()
+  @callback get_products() :: {:ok, list(CoreStructure.aggregate())} | CoreStructure.error()
 
   @doc """
   Get all products by category_id
   """
-  @callback get_products_by_category_id(category_id :: String.t()) :: {:ok, list(ProductAggregate.t())} | CoreStructure.error()
+  @callback get_products_by_category_id(category_id :: String.t()) :: {:ok, list(CoreStructure.aggregate())} | CoreStructure.error()
 
   @doc """
   Get detail product by id
   """
-  @callback get_product_by_id(id :: String.t()) :: {:ok, ProductAggregate.t()} | CoreStructure.error()
+  @callback get_product_by_id(id :: String.t()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
 
   @doc """
   Save product. Given argument will be product's aggregate
   """
-  @callback save(product_aggregate :: ProductAggregate.t()) :: {:ok, ProductAggregate.t()} | CoreStructure.error()
+  @callback save(product_aggregate :: CoreStructure.aggregate()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
 
   @doc """
   Remove product, given argument will be product's aggregate
   """
-  @callback remove(product_aggregate :: ProductAggregate.t()) :: {:ok, ProductAggregate.t()} | CoreStructure.error()
+  @callback remove(product_aggregate :: CoreStructure.aggregate()) :: {:ok, CoreStructure.aggregate()} | CoreStructure.error()
 end
