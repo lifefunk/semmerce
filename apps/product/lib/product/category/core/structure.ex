@@ -47,18 +47,18 @@ defmodule Product.Category.Core.Structure do
 
         with category_validated <- validation_result,
             uid <- CoreId.new()
-      do
-        entity = %Entity{
-          id: uid,
-          name: category_validated.name,
-          desc: Map.get(category, :desc),
-          created_at: DateTime.utc_now()
-        }
+        do
+          entity = %Entity{
+            id: uid,
+            name: category_validated.name,
+            desc: Map.get(category, :desc),
+            created_at: DateTime.utc_now()
+          }
 
-        {:ok, entity}
-      else
-        err -> err
-      end
+          {:ok, entity}
+        else
+          err -> err
+        end
     end
 
     @spec change_name(category :: t(), name :: String.t()) :: {:ok, t()}

@@ -5,7 +5,6 @@ defmodule Product.Category.Core.Aggregate do
   alias Product.Category.Core.Structure.Entity, as: CategoryEntity
   alias Product.Category.Core.Aggregate.Event, as: CategoryEvent
 
-  @enforce_keys [:entity, :events]
   defstruct [:entity, :events]
 
   @typedoc """
@@ -13,8 +12,8 @@ defmodule Product.Category.Core.Aggregate do
   this structure
   """
   @type t :: %__MODULE__{
-    entity: CategoryEntity.t(),
-    events: list(CoreStructure.event()),
+    entity: CategoryEntity.t() | nil,
+    events: list(CoreStructure.event()) | list(),
   }
 
   @aggregate_name :category
@@ -63,6 +62,11 @@ defmodule Product.Category.Core.Aggregate do
       entity: category,
       events: []
     }}
+  end
+
+  @spec new() :: CoreStructure.aggregate()
+  def new() do
+    {:aggregate, @aggregate_name, %Aggregate{}}
   end
 
   @doc """
