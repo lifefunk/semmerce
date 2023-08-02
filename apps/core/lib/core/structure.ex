@@ -16,6 +16,12 @@ defmodule Core.Structure do
   @type ok :: {:ok, any()}
 
   @typedoc """
+  Actually it follows Rust's Result<T> or Scala Option[T],
+  this type used to handle a result between success or error
+  """
+  @type results :: ok() | error()
+
+  @typedoc """
   Define all possible types used as event's payload
   """
   @type event_payload ::
@@ -56,7 +62,7 @@ defmodule Core.Structure do
   @typedoc """
   Define a payload type for aggregate data structure
   """
-  @type aggregate_payload :: struct() | map() | nil
+  @type aggregate_payload :: struct() | map() | atom()
 
   @typedoc """
   Define a structure of aggregate data structure, it contains
