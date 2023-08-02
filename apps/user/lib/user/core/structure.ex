@@ -1,4 +1,4 @@
-defmodule User.Structure do
+defmodule User.Core.Structure do
 
   defmodule Password do
     @moduledoc """
@@ -70,12 +70,12 @@ defmodule User.Structure do
     """
     alias Core.Structure
     alias Core.Structure.Id
-    alias User.Structure.Password
+    alias User.Core.Structure.Password
 
     @enforce_keys [:id, :name, :email, :password, :created_at]
     defstruct [:id, :name, :email, :password, :created_at, :updated_at]
 
-    @error_validation_not_passed {:error, "invalid given new user structure"}
+    @error_validation_not_passed {:error, {:validation, "invalid given new user structure"}}
 
     @typedoc """
     Define main entity properties of the user
@@ -102,7 +102,7 @@ defmodule User.Structure do
     new used to generate new user's entity. It will generate User's entity
     including for it's id and created_at
     """
-    @spec new(user :: new_user()) :: t() | Structure.error()
+    @spec new(user :: new_user()) :: {:ok, t()} | Structure.error()
     def new(user) when is_map(user) do
 
       validation_result =
@@ -112,13 +112,15 @@ defmodule User.Structure do
       with user_validated <- validation_result,
             uid <- Id.new()
       do
-        %Entity{
+        entity = %Entity{
           id: uid,
           name: user_validated.name,
           email: user_validated.email,
           password: Password.new(user_validated.password) |> Password.hash,
           created_at: DateTime.utc_now()
         }
+
+        {:ok, entity}
       else
         err -> err
       end
@@ -140,40 +142,4 @@ defmodule User.Structure do
     end
 
   end
-
-  defmodule Event do
-    @moduledoc """
-    Event used to describe all user's management. It describe per event names and it's payload
-    """
-    alias Core.Structure, as: CoreStructure
-    alias User.Structure.Entity, as: UserEntity
-
-    @error_invalid_user_type "invalid given user type"
-
-    @doc """
-    user_registered triggered when user successfully registered to system
-    """
-    @spec user_registered(user :: UserEntity.t()) :: CoreStructure.event() | CoreStructure.error()
-    def user_registered(user) when is_struct(user), do: {:event, :user_registered, user}
-    def user_registered(_), do: {:error, @error_invalid_user_type}
-
-    @doc """
-    user_logged_in triggered when user successfully loggedi in to system
-    """
-    @spec user_logged_in(user :: UserEntity.t()) :: CoreStructure.event() | CoreStructure.error()
-    def user_logged_in(user) when is_struct(user), do: {:even, :user_logged_in, user}
-    def user_logged_in(_), do: {:error, @error_invalid_user_type}
-
-    @spec user_modified(user :: UserEntity.t()) :: CoreStructure.event() | CoreStructure.error()
-    def user_modified(user) when is_struct(user), do: {:event, :user_modified, user}
-    def user_modified(_), do: {:error, @error_invalid_user_type}
-
-    @doc """
-    user_deleted triggered when user deleted from system
-    """
-    @spec user_deleted(user :: UserEntity.t()) :: CoreStructure.event() | CoreStructure.error()
-    def user_deleted(user) when is_struct(user), do: {:event, :user_deleted, user}
-    def user_deleted(_), do: {:error, @error_invalid_user_type}
-  end
-
 end
